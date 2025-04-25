@@ -1,0 +1,14 @@
+extends: default
+
+ignore: |
+  helm/oncall/templates/**/*.yaml
+  pnpm-lock.yaml
+
+rules:
+  line-length:
+    max: 120
+
+  comments:
+    min-spaces-from-content: 1
+
+  document-start: disable
