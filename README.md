@@ -132,6 +132,8 @@ docker-compose -f docker-prometheus-compose.yml up --build
 
 ### Kết quả cuối cùng
 
+![](images/27.png)
+
 ![](images/26.png)
 
 ![](images/25.png)
