@@ -76,6 +76,8 @@ Nhớ đổi **<ONCALL_ENGINE_PUBLIC_URL>** thành link zrok vừa tạo ở tr�
 
 ## Từ thông tin Slack App, nhập vào Grafana OnCall Setup ENV VARIABLES
 
+1. Nhập thông tin
+
 ![](images/12.png)
 
 ```js
@@ -89,5 +91,48 @@ SLACK_INSTALL_RETURN_REDIRECT_HOST = << OnCall external URL >>
 
 ![](images/15.png)
 
-### Tới đây thì ta đã thành công và setup thử test thử như sau xem có gửi qua Slack không
+![](images/15a.png)
+
+![](images/15b.png)
+
+![](images/15c.png)
+
+2. Cài đặt thông báo qua Slack cho tài khoản
+
+![](images/18.png)
+
+3. Test nhận thông báo qua Slack
+
+![](images/21.png)
+
+![](images/22.png)
+
+
+## Alert Manager
+
+1. Cài đặt Link URL Integration
+
+![](images/16.png)
+
+![](images/17.png)
+
+Nhập URL vào file **./alertmanager/alertmanager.yml**
+
+2. Cài đặt Prometheus Alert Manager
+
+```bash
+docker-compose -f docker-prometheus-compose.yml up --build
+```
+
+![](images/19.png)
+
+3. Gắn link Integration qua bên Prometheus Alert Manager
+
+![](images/23.png)
+
+### Kết quả cuối cùng
+
+![](images/26.png)
+
+![](images/25.png)
 
