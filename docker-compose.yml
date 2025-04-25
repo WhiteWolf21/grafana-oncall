@@ -1,0 +1,121 @@
+x-environment: &oncall-environment
+  DATABASE_TYPE: sqlite3  # Loại cơ sở dữ liệu được sử dụng là sqlite3
+  BROKER_TYPE: redis  # Sử dụng Redis làm message broker cho hệ thống
+  BASE_URL: $DOMAIN  # URL cơ sở của ứng dụng, lấy giá trị từ biến môi trường DOMAIN
+  SECRET_KEY: $SECRET_KEY  # Khóa bí mật cho ứng dụng, lấy từ biến môi trường SECRET_KEY
+  FEATURE_PROMETHEUS_EXPORTER_ENABLED: ${FEATURE_PROMETHEUS_EXPORTER_ENABLED:-false}  # Bật/tắt tính năng xuất dữ liệu cho Prometheus, mặc định là false
+  PROMETHEUS_EXPORTER_SECRET: ${PROMETHEUS_EXPORTER_SECRET:-}  # Khóa bí mật cho Prometheus exporter, lấy từ biến môi trường hoặc để trống
+  REDIS_URI: redis://redis:6379/0  # Địa chỉ kết nối đến Redis, sử dụng database 0
+  DJANGO_SETTINGS_MODULE: settings.hobby  # Module cấu hình Django được sử dụng
+  CELERY_WORKER_QUEUE: "default,critical,long,slack,telegram,webhook,retry,celery,grafana"  # Các hàng đợi cho worker Celery
+  CELERY_WORKER_CONCURRENCY: "1"  # Số lượng tiến trình con cho mỗi worker Celery
+  CELERY_WORKER_MAX_TASKS_PER_CHILD: "100"  # Số lượng tác vụ tối đa mỗi tiến trình con Celery xử lý trước khi khởi động lại
+  CELERY_WORKER_SHUTDOWN_INTERVAL: "65m"  # Thời gian trước khi worker Celery tự động tắt
+  CELERY_WORKER_BEAT_ENABLED: "True"  # Bật tính năng Celery beat để lên lịch các tác vụ định kỳ
+  GRAFANA_API_URL: http://grafana:3000  # Địa chỉ API của Grafana
+
+services:
+  engine:
+    image: grafana/oncall:v1.9.0  # Sử dụng image grafana/oncall từ Docker Hub
+    restart: always  # Luôn khởi động lại container nếu bị lỗi
+    ports:
+      - "8080:8080"  # Ánh xạ cổng 8080 của máy host đến cổng 8080 của container
+    command: sh -c "uwsgi --ini uwsgi.ini"  # Lệnh khởi động uwsgi với file cấu hình uwsgi.ini
+    environment: *oncall-environment  # Sử dụng cấu hình môi trường đã định nghĩa ở trên
+    volumes:
+      - oncall_data:/var/lib/oncall  # Gắn volume oncall_data vào đường dẫn /var/lib/oncall trong container
+    depends_on:
+      oncall_db_migration:  # Phụ thuộc vào dịch vụ oncall_db_migration
+        condition: service_completed_successfully  # Chỉ khởi động khi dịch vụ migration hoàn thành thành công
+      redis:  # Phụ thuộc vào dịch vụ redis
+        condition: service_healthy  # Chỉ khởi động khi dịch vụ redis có trạng thái healthy
+
+  celery:
+    image: grafana/oncall:v1.9.0  # Sử dụng image grafana/oncall từ Docker Hub
+    restart: always  # Luôn khởi động lại container nếu bị lỗi
+    command: sh -c "./celery_with_exporter.sh"  # Lệnh khởi động Celery với exporter
+    environment: *oncall-environment  # Sử dụng cấu hình môi trường đã định nghĩa ở trên
+    volumes:
+      - oncall_data:/var/lib/oncall  # Gắn volume oncall_data vào đường dẫn /var/lib/oncall trong container
+    depends_on:
+      oncall_db_migration:  # Phụ thuộc vào dịch vụ oncall_db_migration
+        condition: service_completed_successfully  # Chỉ khởi động khi dịch vụ migration hoàn thành thành công
+      redis:  # Phụ thuộc vào dịch vụ redis
+        condition: service_healthy  # Chỉ khởi động khi dịch vụ redis có trạng thái healthy
+
+  oncall_db_migration:
+    image: grafana/oncall:v1.9.0  # Sử dụng image grafana/oncall từ Docker Hub
+    command: python manage.py migrate --noinput  # Lệnh chạy migration Django mà không cần nhập dữ liệu
+    environment: *oncall-environment  # Sử dụng cấu hình môi trường đã định nghĩa ở trên
+    volumes:
+      - oncall_data:/var/lib/oncall  # Gắn volume oncall_data vào đường dẫn /var/lib/oncall trong container
+    depends_on:
+      redis:  # Phụ thuộc vào dịch vụ redis
+        condition: service_healthy  # Chỉ khởi động khi dịch vụ redis có trạng thái healthy
+
+  redis:
+    image: redis:7.0.15  # Sử dụng Redis phiên bản 7.0.15
+    restart: always  # Luôn khởi động lại container nếu bị lỗi
+    expose:
+      - 6379  # Mở cổng 6379 cho các dịch vụ khác trong mạng Docker
+    volumes:
+      - redis_data:/data  # Gắn volume redis_data vào đường dẫn /data trong container
+    deploy:
+      resources:
+        limits:
+          memory: 500m  # Giới hạn bộ nhớ sử dụng là 500MB
+          cpus: "0.5"  # Giới hạn CPU sử dụng là 0.5 core
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]  # Kiểm tra sức khỏe bằng lệnh redis-cli ping
+      timeout: 5s  # Thời gian timeout cho mỗi lần kiểm tra là 5 giây
+      interval: 5s  # Khoảng thời gian giữa các lần kiểm tra là 5 giây
+      retries: 10  # Số lần thử lại tối đa là 10
+
+  prometheus:
+    image: prom/prometheus  # Sử dụng image Prometheus chính thức
+    hostname: prometheus  # Đặt tên máy chủ là prometheus
+    restart: always  # Luôn khởi động lại container nếu bị lỗi
+    ports:
+      - "9090:9090"  # Ánh xạ cổng 9090 của máy host đến cổng 9090 của container
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml  # Gắn file cấu hình prometheus.yml từ thư mục hiện tại
+      - prometheus_data:/prometheus  # Gắn volume prometheus_data vào thư mục /prometheus
+    profiles:
+      - with_prometheus  # Chỉ khởi động khi chạy với profile "with_prometheus"
+
+  grafana:
+    image: "grafana/${GRAFANA_IMAGE:-grafana:latest}"  # Sử dụng image Grafana từ biến GRAFANA_IMAGE hoặc mặc định là grafana:latest
+    restart: always  # Luôn khởi động lại container nếu bị lỗi
+    ports:
+      - "3000:3000"  # Ánh xạ cổng 3000 của máy host đến cổng 3000 của container
+    environment:
+      GF_FEATURE_TOGGLES_ENABLE: externalServiceAccounts  # Bật tính năng tài khoản dịch vụ bên ngoài
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}  # Tên người dùng admin, mặc định là "admin"
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}  # Mật khẩu admin, mặc định là "admin"
+      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: grafana-oncall-app  # Cho phép tải plugin OnCall chưa ký
+      GF_INSTALL_PLUGINS: "grafana-oncall-app vv1.9.0"  # Cài đặt plugin OnCall
+      GF_AUTH_MANAGED_SERVICE_ACCOUNTS_ENABLED: true  # Bật tính năng tài khoản dịch vụ được quản lý
+    volumes:
+      - grafana_data:/var/lib/grafana  # Gắn volume grafana_data vào thư mục dữ liệu Grafana
+    deploy:
+      resources:
+        limits:
+          memory: 500m  # Giới hạn bộ nhớ sử dụng là 500MB
+          cpus: "0.5"  # Giới hạn CPU sử dụng là 0.5 core
+    profiles:
+      - with_grafana  # Chỉ khởi động khi chạy với profile "with_grafana"
+    configs:
+      - source: grafana.ini  # Sử dụng cấu hình grafana.ini đã định nghĩa
+        target: /etc/grafana/grafana.ini  # Gắn vào đường dẫn cấu hình trong container
+
+volumes:
+  grafana_data:  # Định nghĩa volume grafana_data để lưu trữ dữ liệu Grafana
+  prometheus_data:  # Định nghĩa volume prometheus_data để lưu trữ dữ liệu Prometheus
+  oncall_data:  # Định nghĩa volume oncall_data để lưu trữ dữ liệu OnCall
+  redis_data:  # Định nghĩa volume redis_data để lưu trữ dữ liệu Redis
+
+configs:
+  grafana.ini:  # Định nghĩa cấu hình grafana.ini
+    content: |
+      [feature_toggles]
+      accessControlOnCall = false 

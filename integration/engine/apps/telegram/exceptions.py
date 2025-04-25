@@ -1,2 +1,0 @@
-class AlertGroupTelegramMessageDoesNotExist(Exception):
-    pass
