@@ -9,3 +9,13 @@ groups:
         annotations:
           summary: "High CPU usage detected on {{ $labels.instance }}"
           description: "CPU usage on instance {{ $labels.instance }} has been above 1% for the last interval."
+  # - name: DiskSpace
+  #   rules:
+  #     - alert: LowDiskSpace
+  #       expr: (node_filesystem_avail_bytes{mountpoint=~"C:|C:\\\\|/mnt/c"} / node_filesystem_size_bytes{mountpoint="C:|C:\\\\|/mnt/c"}) * 100 < 10
+  #       for: 5m
+  #       labels:
+  #         severity: critical
+  #       annotations:
+  #         summary: "Low disk space on {{ $labels.instance }}"
+  #         description: "Disk space on instance {{ $labels.instance }} is below 10%."
