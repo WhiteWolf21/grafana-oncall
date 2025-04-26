@@ -1,80 +1,80 @@
 _metadata:
-  major_version: 1
-  minor_version: 1
+  major_version: 1  # Phiên bản chính của tệp cấu hình
+  minor_version: 1  # Phiên bản phụ của tệp cấu hình
 display_information:
-  name: GrafanaOnCall
+  name: GrafanaOnCall  # Tên hiển thị của ứng dụng trong Slack
 features:
   app_home:
-    home_tab_enabled: false
-    messages_tab_enabled: true
-    messages_tab_read_only_enabled: false
+    home_tab_enabled: false  # Không bật tab trang chủ
+    messages_tab_enabled: true  # Bật tab tin nhắn
+    messages_tab_read_only_enabled: false  # Tab tin nhắn không phải chỉ đọc
   bot_user:
-    display_name: GrafanaOnCall
-    always_online: true
+    display_name: GrafanaOnCall  # Tên hiển thị của người dùng bot
+    always_online: true  # Bot luôn ở trạng thái trực tuyến
   shortcuts:
-    - name: Add to resolution note
-      type: message
-      callback_id: add_resolution_note
-      description: Add this message to resolution note
+    - name: Add to resolution note  # Tên của phím tắt
+      type: message  # Loại phím tắt: áp dụng cho tin nhắn
+      callback_id: add_resolution_note  # ID gọi lại khi phím tắt được sử dụng
+      description: Add this message to resolution note  # Mô tả phím tắt
   slash_commands:
-    - command: /escalate
-      url: https://3o7ygs7sgg6f.share.zrok.io/slack/interactive_api_endpoint/
-      description: Direct page a team or user(s)
-      should_escape: false
+    - command: /escalate  # Lệnh slash để leo thang vấn đề
+      url: https://3o7ygs7sgg6f.share.zrok.io/slack/interactive_api_endpoint/  # URL để xử lý lệnh
+      description: Direct page a team or user(s)  # Mô tả của lệnh
+      should_escape: false  # Không cần escape các ký tự đặc biệt
 oauth_config:
-  redirect_urls:
+  redirect_urls:  # Các URL chuyển hướng sau khi xác thực OAuth
     - https://3o7ygs7sgg6f.share.zrok.io/api/internal/v1/complete/slack-install-free/
     - https://3o7ygs7sgg6f.share.zrok.io/api/internal/v1/complete/slack-login/
   scopes:
-    user:
-      - channels:read
-      - identify
-      - users.profile:read
-    bot:
-      - app_mentions:read
-      - channels:history
-      - channels:read
-      - chat:write
-      - chat:write.customize
-      - chat:write.public
-      - commands
-      - files:write
-      - groups:history
-      - groups:read
-      - im:history
-      - im:read
-      - im:write
-      - mpim:history
-      - mpim:read
-      - mpim:write
-      - reactions:write
-      - team:read
-      - usergroups:read
-      - usergroups:write
-      - users.profile:read
-      - users:read
-      - users:read.email
-      - users:write
+    user:  # Các phạm vi quyền cho người dùng
+      - channels:read  # Đọc thông tin kênh
+      - identify  # Xác định danh tính người dùng
+      - users.profile:read  # Đọc thông tin hồ sơ người dùng
+    bot:  # Các phạm vi quyền cho bot
+      - app_mentions:read  # Đọc các đề cập đến ứng dụng
+      - channels:history  # Xem lịch sử kênh
+      - channels:read  # Đọc thông tin kênh
+      - chat:write  # Gửi tin nhắn
+      - chat:write.customize  # Tùy chỉnh tin nhắn
+      - chat:write.public  # Gửi tin nhắn trong kênh công khai
+      - commands  # Sử dụng lệnh slash
+      - files:write  # Tạo và chia sẻ tệp
+      - groups:history  # Xem lịch sử nhóm riêng tư
+      - groups:read  # Đọc thông tin nhóm riêng tư
+      - im:history  # Xem lịch sử tin nhắn trực tiếp
+      - im:read  # Đọc tin nhắn trực tiếp
+      - im:write  # Gửi tin nhắn trực tiếp
+      - mpim:history  # Xem lịch sử nhóm tin nhắn nhiều người
+      - mpim:read  # Đọc nhóm tin nhắn nhiều người
+      - mpim:write  # Gửi tin nhắn đến nhóm nhiều người
+      - reactions:write  # Thêm biểu tượng cảm xúc
+      - team:read  # Đọc thông tin đội
+      - usergroups:read  # Đọc nhóm người dùng
+      - usergroups:write  # Sửa đổi nhóm người dùng
+      - users.profile:read  # Đọc hồ sơ người dùng
+      - users:read  # Đọc thông tin người dùng
+      - users:read.email  # Đọc email người dùng
+      - users:write  # Sửa đổi thông tin người dùng
 settings:
   event_subscriptions:
-    request_url: https://3o7ygs7sgg6f.share.zrok.io/slack/event_api_endpoint/
-    bot_events:
-      - app_home_opened
-      - app_mention
-      - channel_archive
-      - channel_created
-      - channel_deleted
-      - channel_rename
-      - channel_unarchive
-      - member_joined_channel
-      - message.channels
-      - message.im
-      - subteam_created
-      - subteam_members_changed
-      - subteam_updated
-      - user_profile_changed
+    request_url: https://3o7ygs7sgg6f.share.zrok.io/slack/event_api_endpoint/  # URL nhận thông báo sự kiện
+    bot_events:  # Các sự kiện mà bot lắng nghe
+      - app_home_opened  # Khi trang chủ ứng dụng được mở
+      - app_mention  # Khi bot được đề cập
+      - channel_archive  # Khi kênh được lưu trữ
+      - channel_created  # Khi kênh được tạo
+      - channel_deleted  # Khi kênh bị xóa
+      - channel_rename  # Khi kênh được đổi tên
+      - channel_unarchive  # Khi kênh được khôi phục từ lưu trữ
+      - member_joined_channel  # Khi thành viên tham gia kênh
+      - message.channels  # Tin nhắn trong kênh
+      - message.im  # Tin nhắn trực tiếp
+      - subteam_created  # Khi nhóm con được tạo
+      - subteam_members_changed  # Khi thành viên nhóm con thay đổi
+      - subteam_updated  # Khi nhóm con được cập nhật
+      - user_profile_changed  # Khi hồ sơ người dùng thay đổi
   interactivity:
-    is_enabled: true
-    request_url: https://3o7ygs7sgg6f.share.zrok.io/slack/interactive_api_endpoint/
-  org_deploy_enabled: false
-  socket_mode_enabled: false
+    is_enabled: true  # Bật tính năng tương tác
+    request_url: https://3o7ygs7sgg6f.share.zrok.io/slack/interactive_api_endpoint/  # URL xử lý tương tác
+  org_deploy_enabled: false  # Không bật triển khai toàn bộ tổ chức
+  socket_mode_enabled: false  # Không sử dụng chế độ socket

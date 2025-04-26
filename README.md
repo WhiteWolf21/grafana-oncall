@@ -40,8 +40,6 @@ https://api-v1.zrok.io
 zrok.exe enable <token>
 ```
 
-![https://3o7ygs7sgg6f.share.zrok.io](images/6.png)
-
 3. Vì port của OnCall Engine là 8080 nên ta sẽ chạy lệnh sau
 
 ![](images/3.png)
@@ -49,6 +47,8 @@ zrok.exe enable <token>
 ```bash
 zrok.exe share public 8080
 ```
+
+![https://3o7ygs7sgg6f.share.zrok.io](images/6.png)
 
 ## Cài đặt Slack WebHook
 
